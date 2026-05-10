@@ -1,0 +1,426 @@
+@import "tailwindcss";
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-color: #050510;
+  --text-color: #ffffff;
+  --glass-bg: rgba(20, 25, 40, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-blur: blur(20px);
+  --accent: #00ffcc;
+  --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #050510;
+  font-family: var(--font-sans);
+  color: #fff;
+}
+
+.ar-root {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  overflow: hidden;
+}
+
+/* Video + Canvases — object-fit: cover fills the viewport; mirror/zoom are set inline in NeonAura for overlay sync */
+.input-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center center;
+  z-index: 0;
+  filter: brightness(0.66) contrast(1.1);
+}
+
+.bg-canvas, .main-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: auto;
+  transform-origin: center center;
+}
+
+.bg-canvas {
+  z-index: 1;
+  pointer-events: none;
+}
+
+.main-canvas {
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* HUD */
+.hud {
+  position: absolute;
+  top: clamp(12px, 2.5vw, 24px);
+  left: clamp(12px, 2.5vw, 24px);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: clamp(10px, 2vw, 14px) clamp(12px, 2.5vw, 18px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+  min-width: 200px;
+}
+
+.hud-title {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0.7;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.hud-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.hud-row:last-child { margin-bottom: 0; }
+
+.hud-lbl {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.35);
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.hud-bar-track {
+  flex: 1;
+  height: 3px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.hud-bar-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+  transition: width 0.1s ease;
+}
+
+.hud-val {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: rgba(255,255,255,0.7);
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.hud-divider {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  margin: 10px 0;
+}
+
+/* Theme tabs */
+.theme-bar {
+  position: absolute;
+  bottom: clamp(12px, 2.5vw, 24px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  max-width: calc(100vw - 24px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 40px;
+  padding: 5px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+  white-space: nowrap;
+}
+.theme-bar::-webkit-scrollbar { display: none; }
+
+.theme-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(255,255,255,0.45);
+  padding: clamp(6px, 1.5vw, 8px) clamp(12px, 2.5vw, 18px);
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: clamp(0.65rem, 1.5vw, 0.75rem);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.theme-btn:hover { color: rgba(255,255,255,0.8); }
+.theme-btn.active {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.18);
+  color: white;
+  text-shadow: 0 0 14px rgba(255,255,255,0.55);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.theme-sep {
+  display: inline-block;
+  width: 1px;
+  height: 22px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 1px;
+  align-self: center;
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+.fire-btn {
+  color: rgba(255, 130, 40, 0.7) !important;
+}
+.fire-btn:hover { color: rgba(255, 160, 60, 1) !important; }
+.fire-btn.active {
+  background: rgba(255, 60, 0, 0.18) !important;
+  border-color: rgba(255, 100, 0, 0.4) !important;
+  color: #ffaa44 !important;
+  text-shadow: 0 0 14px rgba(255, 100, 0, 0.8) !important;
+  box-shadow: inset 0 1px 0 rgba(255,120,0,0.2) !important;
+}
+
+.saber-btn {
+  color: rgba(255, 60, 60, 0.7) !important;
+}
+.saber-btn:hover { color: rgba(255, 80, 80, 1) !important; }
+.saber-btn.active {
+  background: rgba(180, 0, 0, 0.22) !important;
+  border-color: rgba(255, 40, 40, 0.45) !important;
+  color: #ff4444 !important;
+  text-shadow: 0 0 16px rgba(255, 0, 0, 0.9) !important;
+  box-shadow: inset 0 1px 0 rgba(255,50,50,0.25) !important;
+}
+
+/* Vertical sliders */
+.slider-panel {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: clamp(12px, 2vw, 18px) clamp(8px, 1.5vw, 12px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.slider-panel label {
+  font-family: var(--font-sans);
+  font-size: clamp(0.55rem, 1.2vw, 0.65rem);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+}
+
+.v-slider {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 6px;
+  height: clamp(70px, 14vh, 110px);
+  cursor: pointer;
+  accent-color: var(--accent);
+  background: transparent;
+  touch-action: none;
+}
+
+/* Start overlay */
+.start-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.88);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(12px);
+  transition: opacity 0.5s ease;
+}
+
+.start-overlay h1 {
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: clamp(1.5rem, 6vw, 2.4rem);
+  letter-spacing: clamp(0.12em, 2vw, 0.28em);
+  margin-bottom: 14px;
+  padding: 0 16px;
+  text-align: center;
+  background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.4) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.start-overlay p {
+  font-size: clamp(0.72rem, 2vw, 0.84rem);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.3);
+  margin-bottom: clamp(28px, 6vw, 52px);
+  padding: 0 24px;
+  text-align: center;
+}
+
+.start-btn {
+  padding: clamp(11px, 2vw, 14px) clamp(30px, 6vw, 48px);
+  font-size: clamp(0.72rem, 2vw, 0.82rem);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  background: linear-gradient(135deg, #ff00cc, #3333ff);
+  border: none;
+  color: white;
+  border-radius: 40px;
+  cursor: pointer;
+  box-shadow: 0 0 40px rgba(130,0,255,0.35), 0 0 80px rgba(130,0,255,0.12);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.start-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 60px rgba(130,0,255,0.55), 0 0 120px rgba(130,0,255,0.2);
+}
+
+/* Gesture hint overlay for lightsaber mode */
+.saber-hint {
+  position: absolute;
+  top: clamp(12px, 2.5vw, 24px);
+  right: clamp(12px, 2.5vw, 24px);
+  z-index: 10;
+  background: rgba(180, 0, 0, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 50, 50, 0.25);
+  border-radius: 14px;
+  padding: 12px 16px;
+  pointer-events: none;
+}
+
+.saber-hint-title {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #ff4444;
+  opacity: 0.8;
+  margin-bottom: 6px;
+}
+
+.saber-hint-text {
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.05em;
+}
+
+/* ── Saber colour picker ────────────────────────────────────────────── */
+.saber-color-panel {
+  position: absolute;
+  top: calc(clamp(12px, 2.5vw, 24px) + 90px);
+  right: clamp(12px, 2.5vw, 24px);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 12px 10px;
+}
+
+.saber-color-label {
+  font-size: 0.52rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 2px;
+}
+
+.saber-color-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.15);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  position: relative;
+}
+
+.saber-color-btn:hover {
+  transform: scale(1.18);
+}
+
+.saber-color-btn.active {
+  border-color: rgba(255,255,255,0.7);
+  transform: scale(1.22);
+}
+
+.saber-color-red   { background: radial-gradient(circle at 40% 35%, #ff8888, #ff0000); }
+.saber-color-blue  { background: radial-gradient(circle at 40% 35%, #88aaff, #2266ff); }
+.saber-color-green { background: radial-gradient(circle at 40% 35%, #88ffaa, #00cc44); }
+
+.saber-color-red.active   { box-shadow: 0 0 14px 4px rgba(255,  0,  0, 0.7); }
+.saber-color-blue.active  { box-shadow: 0 0 14px 4px rgba( 40, 80,255, 0.7); }
+.saber-color-green.active { box-shadow: 0 0 14px 4px rgba(  0,200, 60, 0.7); }
+
+.hidden {
+  display: none !important;
+}
