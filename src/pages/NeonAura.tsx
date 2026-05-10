@@ -1370,15 +1370,20 @@ export default function NeonAura() {
 
   function handleResize() {
     const s = stateRef.current;
-    s.width = window.innerWidth;
-    s.height = window.innerHeight;
+    /* Use the canvas's actual displayed CSS box (respects safe-area padding on .ar-root)
+       and fall back to window dimensions before mount. */
+    const ref = mainCanvasRef.current ?? bgCanvasRef.current;
+    const w = ref?.clientWidth || window.innerWidth;
+    const h = ref?.clientHeight || window.innerHeight;
+    s.width = w;
+    s.height = h;
     if (bgCanvasRef.current) {
-      bgCanvasRef.current.width = s.width;
-      bgCanvasRef.current.height = s.height;
+      bgCanvasRef.current.width = w;
+      bgCanvasRef.current.height = h;
     }
     if (mainCanvasRef.current) {
-      mainCanvasRef.current.width = s.width;
-      mainCanvasRef.current.height = s.height;
+      mainCanvasRef.current.width = w;
+      mainCanvasRef.current.height = h;
     }
   }
 
@@ -1471,9 +1476,20 @@ export default function NeonAura() {
   }, []);
 
   useEffect(() => {
-    window.addEventListener("resize", handleResize);
+    let raf = 0;
+    const onResize = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(handleResize);
+    };
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    /* iOS Safari URL bar resize fires on visualViewport, not window */
+    window.visualViewport?.addEventListener("resize", onResize);
     return () => {
-      window.removeEventListener("resize", handleResize);
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+      window.visualViewport?.removeEventListener("resize", onResize);
       cancelAnimationFrame(renderLoopRef.current);
     };
   }, []);
@@ -1637,7 +1653,7 @@ export default function NeonAura() {
 
       {/* Dim Slider */}
       {started && (
-        <div className="slider-panel" style={{ right: "clamp(12px, 2.5vw, 24px)" }}>
+        <div className="slider-panel slider-panel--right">
           <label>Bright</label>
           <input
             type="range"
@@ -1653,7 +1669,7 @@ export default function NeonAura() {
 
       {/* Zoom Slider */}
       {started && (
-        <div className="slider-panel" style={{ left: "clamp(12px, 2.5vw, 24px)" }}>
+        <div className="slider-panel slider-panel--left">
           <label>+</label>
           <input
             type="range"

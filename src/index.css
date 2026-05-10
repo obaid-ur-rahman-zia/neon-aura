@@ -20,10 +20,16 @@
 html, body, #root {
   width: 100%;
   height: 100%;
+  /* Prefer dynamic viewport on mobile to avoid 100vh issue with iOS Safari URL bar */
+  min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
   background: #050510;
   font-family: var(--font-sans);
   color: #fff;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .ar-root {
@@ -31,6 +37,9 @@ html, body, #root {
   inset: 0;
   background: #000;
   overflow: hidden;
+  /* Respect notches / home indicator */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+           env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 /* Video + Canvases — object-fit: cover fills the viewport; mirror/zoom are set inline in NeonAura for overlay sync */
@@ -84,9 +93,10 @@ html, body, #root {
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   border-radius: 14px;
-  padding: clamp(10px, 2vw, 14px) clamp(12px, 2.5vw, 18px);
+  padding: clamp(8px, 2vw, 14px) clamp(10px, 2.5vw, 18px);
   box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
-  min-width: 200px;
+  min-width: clamp(150px, 42vw, 200px);
+  max-width: calc(100vw - 24px);
 }
 
 .hud-title {
@@ -155,7 +165,7 @@ html, body, #root {
 /* Theme tabs */
 .theme-bar {
   position: absolute;
-  bottom: clamp(12px, 2.5vw, 24px);
+  bottom: calc(clamp(12px, 2.5vw, 24px) + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
@@ -175,6 +185,7 @@ html, body, #root {
   padding: 5px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
   white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
 }
 .theme-bar::-webkit-scrollbar { display: none; }
 
@@ -254,9 +265,12 @@ html, body, #root {
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   border-radius: 20px;
-  padding: clamp(12px, 2vw, 18px) clamp(8px, 1.5vw, 12px);
+  padding: clamp(10px, 2vw, 18px) clamp(7px, 1.5vw, 12px);
   box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
 }
+
+.slider-panel--left  { left:  calc(clamp(10px, 2.5vw, 24px) + env(safe-area-inset-left)); }
+.slider-panel--right { right: calc(clamp(10px, 2.5vw, 24px) + env(safe-area-inset-right)); }
 
 .slider-panel label {
   font-family: var(--font-sans);
@@ -271,7 +285,7 @@ html, body, #root {
   writing-mode: vertical-lr;
   direction: rtl;
   width: 6px;
-  height: clamp(70px, 14vh, 110px);
+  height: clamp(60px, 14vh, 110px);
   cursor: pointer;
   accent-color: var(--accent);
   background: transparent;
@@ -370,8 +384,8 @@ html, body, #root {
 /* ── Saber colour picker ────────────────────────────────────────────── */
 .saber-color-panel {
   position: absolute;
-  top: calc(clamp(12px, 2.5vw, 24px) + 90px);
-  right: clamp(12px, 2.5vw, 24px);
+  top: calc(clamp(12px, 2.5vw, 24px) + env(safe-area-inset-top) + 90px);
+  right: calc(clamp(12px, 2.5vw, 24px) + env(safe-area-inset-right));
   z-index: 10;
   display: flex;
   flex-direction: column;
@@ -382,7 +396,7 @@ html, body, #root {
   -webkit-backdrop-filter: blur(18px);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
-  padding: 12px 10px;
+  padding: 10px 8px;
 }
 
 .saber-color-label {
@@ -395,13 +409,14 @@ html, body, #root {
 }
 
 .saber-color-btn {
-  width: 28px;
-  height: 28px;
+  width: clamp(22px, 5vw, 28px);
+  height: clamp(22px, 5vw, 28px);
   border-radius: 50%;
   border: 2px solid rgba(255,255,255,0.15);
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
   position: relative;
+  touch-action: manipulation;
 }
 
 .saber-color-btn:hover {
@@ -423,4 +438,110 @@ html, body, #root {
 
 .hidden {
   display: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Responsive breakpoints
+   ───────────────────────────────────────────────────────────────────── */
+
+/* Tablets and small laptops */
+@media (max-width: 900px) {
+  .hud {
+    top: calc(clamp(10px, 2vw, 18px) + env(safe-area-inset-top));
+    left: calc(clamp(10px, 2vw, 18px) + env(safe-area-inset-left));
+  }
+  .saber-hint {
+    top: calc(clamp(10px, 2vw, 18px) + env(safe-area-inset-top));
+    right: calc(clamp(10px, 2vw, 18px) + env(safe-area-inset-right));
+  }
+}
+
+/* Phones (portrait) */
+@media (max-width: 640px) {
+  .glass-panel {
+    min-width: clamp(140px, 46vw, 180px);
+  }
+
+  .hud-title { font-size: 0.55rem; margin-bottom: 10px; padding-bottom: 8px; }
+  .hud-row { margin-bottom: 7px; gap: 6px; }
+  .hud-lbl { font-size: 0.55rem; width: 28px; }
+  .hud-val { font-size: 0.6rem; width: 32px; }
+
+  /* Slider panels: smaller and tucked closer to edges */
+  .slider-panel {
+    padding: 8px 6px;
+    gap: 6px;
+    border-radius: 14px;
+  }
+  .slider-panel label { font-size: 0.5rem; }
+  .v-slider { height: clamp(56px, 18vh, 90px); width: 5px; }
+
+  /* Theme bar: leave space for sliders on each side */
+  .theme-bar {
+    max-width: calc(100vw - 84px);
+    border-radius: 32px;
+    padding: 4px;
+  }
+  .theme-btn {
+    padding: 6px 10px;
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+  }
+  .theme-sep { height: 16px; margin: 0 1px; }
+
+  .saber-hint {
+    padding: 8px 12px;
+    border-radius: 12px;
+  }
+  .saber-hint-title { font-size: 0.55rem; }
+  .saber-hint-text  { font-size: 0.62rem; }
+
+  .saber-color-panel {
+    top: calc(clamp(10px, 2vw, 18px) + env(safe-area-inset-top) + 78px);
+    padding: 8px 6px;
+    gap: 8px;
+  }
+  .saber-color-label { font-size: 0.48rem; }
+
+  .start-overlay h1 { letter-spacing: 0.14em; }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+  .hud { gap: 6px; }
+  .glass-panel { min-width: 130px; padding: 7px 10px; border-radius: 11px; }
+  .hud-title { font-size: 0.5rem; margin-bottom: 8px; padding-bottom: 6px; }
+  .hud-row { margin-bottom: 5px; }
+
+  .theme-bar { max-width: calc(100vw - 72px); }
+  .theme-btn { padding: 5px 8px; font-size: 0.58rem; }
+}
+
+/* Landscape phones — vertical real estate is tight */
+@media (max-height: 480px) and (orientation: landscape) {
+  .hud { gap: 4px; }
+  .glass-panel {
+    padding: 6px 10px;
+    min-width: clamp(140px, 28vw, 200px);
+  }
+  .hud-title { font-size: 0.5rem; margin-bottom: 6px; padding-bottom: 5px; }
+  .hud-row { margin-bottom: 4px; }
+  .hud-divider { margin: 5px 0; }
+
+  .theme-bar { padding: 3px; }
+  .theme-btn { padding: 5px 10px; font-size: 0.6rem; }
+
+  .v-slider { height: clamp(50px, 26vh, 90px); }
+
+  .start-overlay { flex-direction: row; gap: 18px; }
+  .start-overlay h1 { margin-bottom: 0; font-size: clamp(1.2rem, 4vw, 1.8rem); }
+  .start-overlay p { margin-bottom: 0; max-width: 40vw; }
+}
+
+/* Reduced motion — turn off heavy hover scale animations */
+@media (prefers-reduced-motion: reduce) {
+  .start-btn, .saber-color-btn, .theme-btn {
+    transition: none;
+  }
+  .start-btn:hover, .saber-color-btn:hover { transform: none; }
 }
